@@ -1,0 +1,21 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "name" . }}
+spec:
+  selector:
+    app: {{ template "name" . }}
+    release: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+status:
+  loadBalancer: {}

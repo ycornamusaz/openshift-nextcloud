@@ -1,0 +1,162 @@
+---
+kind: DeploymentConfig
+apiVersion: v1
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "name" . }}
+spec:
+  replicas: 1
+  selector:
+    name: {{ template "fullname" . }}
+  strategy:
+    type: Rolling
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - nginx
+        from:
+          kind: ImageStreamTag
+          name: nginx-{{ template "fullname" . }}:latest
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: nextcloud
+          image: nextcloud:13.0.7-fpm
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9000
+              protocol: TCP
+          securityContext:
+            capabilities: {}
+            privileged: false
+          volumeMounts:
+            - name: data
+              mountPath: /var/www/html
+          resources: {}
+          capabilities: {}
+          env:
+            - name: POSTGRES_HOST
+              value: 127.0.0.1
+
+            - name: POSTGRES_DB
+              value: {{ .Values.nextcloudDbName }}
+
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "fullname" . }}
+                  key: dbUsername
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "fullname" . }}
+                  key: dbPassword
+
+            - name: NEXTCLOUD_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "fullname" . }}
+                  key: appUsername
+
+            - name: NEXTCLOUD_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "fullname" . }}
+                  key: appPassword
+
+            - name: NEXTCLOUD_TRUSTED_DOMAINS
+              value: {{ .Values.nextcloudTrustedDomains }}
+
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 15
+            timeoutSeconds: 1
+
+        - name: nginx
+          image: ""
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+
+          securityContext:
+            capabilities: {}
+            privileged: false
+
+          resources: {}
+
+          volumeMounts:
+            - name: data
+              mountPath: /var/www/html
+              readOnly: true
+
+          capabilities: {}
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            timeoutSeconds: 1
+
+        - name: postgres
+          image: centos/postgresql-96-centos7
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+
+          securityContext:
+            capabilities: {}
+            privileged: false
+
+          resources: {}
+
+          capabilities: {}
+
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+
+          env:
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "fullname" . }}
+                  key: dbPassword
+
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "fullname" . }}
+                  key: dbUsername
+
+            - name: POSTGRESQL_DATABASE
+              value: nextcloud
+
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: pgdata
+          emptyDir: {}

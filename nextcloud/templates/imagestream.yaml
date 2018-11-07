@@ -1,0 +1,34 @@
+---
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: nginx-{{ template "fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "name" . }}
+spec:
+  tag:
+    name: latest
+---
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: nginx
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "name" . }}
+spec:
+  dockerImageRepository: "docker.io/nginx"
+  lookupPolicy:
+    local: false
+  tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: nginx:latest
+      referencePolicy:
+        type: Source

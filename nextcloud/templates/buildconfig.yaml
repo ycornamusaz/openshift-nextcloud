@@ -1,0 +1,28 @@
+---
+kind: BuildConfig
+apiVersion: v1
+metadata:
+  name: nginx-{{ template "fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "name" . }}
+spec:
+  runPolicy: Serial
+  triggers:
+    - type: ImageChange
+      imageChange:
+        from:
+          kind: ImageStreamTag
+          name: nginx:latest
+  source:
+    git:
+      uri: "https://github.com/ycornamusaz/docker-nginx-fpm"
+    type: Git
+  strategy:
+    type: Docker
+  output:
+    to:
+      kind: ImageStreamTag
+      name: nginx-{{ template "fullname" . }}:latest

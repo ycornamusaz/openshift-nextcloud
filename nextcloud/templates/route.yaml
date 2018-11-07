@@ -1,0 +1,17 @@
+---
+kind: Route
+apiVersion: v1
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "name" . }}
+spec:
+  host: {{ .Values.nextcloudTrustedDomains }}
+  to:
+    kind: Service
+    name: {{ template "fullname" . }}
+  port:
+    targetPort: 8080
