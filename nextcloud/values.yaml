@@ -1,0 +1,21 @@
+---
+nextcloud:
+  Db:
+    Name: ""
+    User: ""
+    Password: ""
+  Admin:
+    User: admin
+    Password: root
+  S3:
+    Bucket: ""
+    Key: ""
+    Secret: ""
+    Server: ""
+    Port: 443
+    UseSSL: true
+    Region: ""
+    UsePathStyle: false
+  Auth:
+    Bruteforce: false
+  TrustedDomains: ""

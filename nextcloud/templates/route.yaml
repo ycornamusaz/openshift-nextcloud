@@ -1,17 +1,17 @@
 ---
 kind: Route
-apiVersion: v1
+apiVersion: route.openshift.io/v1
 metadata:
-  name: {{ template "fullname" . }}
+  name: {{ template "nextcloud.fullname" . }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app: {{ template "name" . }}
+    app: {{ template "nextcloud.name" . }}
 spec:
-  host: {{ .Values.nextcloudTrustedDomains }}
+  host: {{ .Values.nextcloud.TrustedDomains }}
   to:
     kind: Service
-    name: {{ template "fullname" . }}
+    name: {{ template "nextcloud.fullname" . }}
   port:
     targetPort: 8080

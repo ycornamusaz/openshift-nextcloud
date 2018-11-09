@@ -2,15 +2,15 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ template "nextcloud.fullname" . }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app: {{ template "name" . }}
+    app: {{ template "nextcloud.name" . }}
 spec:
   selector:
-    app: {{ template "name" . }}
+    app: {{ template "nextcloud.name" . }}
     release: {{ .Release.Name }}
   ports:
     - name: http

@@ -1,26 +1,26 @@
 ---
 kind: ImageStream
-apiVersion: v1
+apiVersion: image.openshift.io/v1
 metadata:
-  name: nginx-{{ template "fullname" . }}
+  name: nginx-s3-{{ template "nextcloud.fullname" . }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app: {{ template "name" . }}
+    app: {{ template "nextcloud.name" . }}
 spec:
   tag:
     name: latest
 ---
 kind: ImageStream
-apiVersion: v1
+apiVersion: image.openshift.io/v1
 metadata:
-  name: nginx
+  name: nginx-{{ template "nextcloud.fullname" . }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app: {{ template "name" . }}
+    app: {{ template "nextcloud.name" . }}
 spec:
   dockerImageRepository: "docker.io/nginx"
   lookupPolicy:

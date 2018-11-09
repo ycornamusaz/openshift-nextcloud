@@ -1,0 +1,43 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ template "nextcloud.fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ template "nextcloud.name" . }}
+data:
+  auth-config: |-
+    <?php
+    
+    $CONFIG = array (
+      'auth.bruteforce.protection.enabled' => {{ .Values.nextcloud.Auth.Bruteforce | default false }},
+    );
+  s3-config: |-
+    <?php
+
+    $CONFIG = array (
+      {{- if and .Values.nextcloud.S3.Bucket .Values.nextcloud.S3.Key .Values.nextcloud.S3.Secret .Values.nextcloud.S3.Server }}
+      'objectstore' => array(
+        'class' => 'OC\\Files\\ObjectStore\\S3',
+        'arguments' => array(
+          'bucket' => {{ .Values.nextcloud.S3.Bucket | quote }},
+          'autocreate' => false,
+          'key'    => {{ .Values.nextcloud.S3.Key | quote }},
+          'secret' => {{ .Values.nextcloud.S3.Secret | quote }},
+          'hostname' => {{ .Values.nextcloud.S3.Server | quote }},
+          'port' => {{ .Values.nextcloud.S3.Port | default 443 }},
+          'use_ssl' => {{ .Values.nextcloud.S3.UseSSL | default true }},
+          {{- if .Values.nextcloud.S3.Region }}
+          'region' => {{ .Values.nextcloud.S3.Region | quote }},
+          {{- end }}
+          {{- if .Values.nextcloud.S3.UsePathStyle }}
+          // required for some non Amazon S3 implementations
+          'use_path_style'=> {{ .Values.nextcloud.S3.Region }},
+          {{- end }}
+        ),
+      ),
+      {{- end }}
+     );

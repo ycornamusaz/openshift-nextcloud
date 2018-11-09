@@ -1,17 +1,15 @@
 ---
 kind: DeploymentConfig
-apiVersion: v1
+apiVersion: apps.openshift.io/v1
 metadata:
-  name: {{ template "fullname" . }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app: {{ template "name" . }}
+    app: {{ template "nextcloud.name" . }}
+  name: {{ template "nextcloud.fullname" . }}
 spec:
   replicas: 1
-  selector:
-    name: {{ template "fullname" . }}
   strategy:
     type: Rolling
   triggers:
@@ -23,11 +21,11 @@ spec:
           - nginx
         from:
           kind: ImageStreamTag
-          name: nginx-{{ template "fullname" . }}:latest
+          name: nginx-s3-{{ template "nextcloud.fullname" . }}:latest
   template:
     metadata:
       labels:
-        app: {{ template "name" . }}
+        app: {{ template "nextcloud.name" . }}
         release: {{ .Release.Name }}
     spec:
       containers:
@@ -43,6 +41,8 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/www/html
+            - name: config
+              mountPath: /usr/src/nextcloud/config/
           resources: {}
           capabilities: {}
           env:
@@ -50,34 +50,38 @@ spec:
               value: 127.0.0.1
 
             - name: POSTGRES_DB
-              value: {{ .Values.nextcloudDbName }}
+              {{- if .Values.nextcloud.Db.Name }}
+              value: {{ .Values.nextcloud.Db.Name }}
+              {{- else }}
+              value: {{ template "nextcloud.name" . }}
+              {{- end }}
 
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "fullname" . }}
+                  name: {{ template "nextcloud.fullname" . }}
                   key: dbUsername
 
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "fullname" . }}
+                  name: {{ template "nextcloud.fullname" . }}
                   key: dbPassword
 
             - name: NEXTCLOUD_ADMIN_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "fullname" . }}
+                  name: {{ template "nextcloud.fullname" . }}
                   key: appUsername
 
             - name: NEXTCLOUD_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "fullname" . }}
+                  name: {{ template "nextcloud.fullname" . }}
                   key: appPassword
 
             - name: NEXTCLOUD_TRUSTED_DOMAINS
-              value: {{ .Values.nextcloudTrustedDomains }}
+              value: {{ .Values.nextcloud.TrustedDomains | quote }}
 
           readinessProbe:
             tcpSocket:
@@ -135,13 +139,13 @@ spec:
             - name: POSTGRESQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "fullname" . }}
+                  name: {{ template "nextcloud.fullname" . }}
                   key: dbPassword
 
             - name: POSTGRESQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "fullname" . }}
+                  name: {{ template "nextcloud.fullname" . }}
                   key: dbUsername
 
             - name: POSTGRESQL_DATABASE
@@ -160,3 +164,11 @@ spec:
           emptyDir: {}
         - name: pgdata
           emptyDir: {}
+        - name: config
+          configMap:
+            name: {{ template "nextcloud.fullname" . }}
+            items:
+              - key: s3-config
+                path: s3.config.php
+              - key: auth-config
+                path: auth.config.php
