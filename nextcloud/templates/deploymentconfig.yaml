@@ -21,7 +21,7 @@ spec:
           - nginx
         from:
           kind: ImageStreamTag
-          name: nginx-s3-{{ template "nextcloud.fullname" . }}:latest
+          name: nginx-nextcloud-{{ template "nextcloud.fullname" . }}:latest
   template:
     metadata:
       labels:
@@ -133,7 +133,7 @@ spec:
 
           volumeMounts:
             - name: pgdata
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/pgsql/data
 
           env:
             - name: POSTGRESQL_PASSWORD
@@ -161,9 +161,11 @@ spec:
       restartPolicy: Always
       volumes:
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: data-{{ template "nextcloud.fullname" . }}
         - name: pgdata
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: pgdata-{{ template "nextcloud.fullname" . }}
         - name: config
           configMap:
             name: {{ template "nextcloud.fullname" . }}

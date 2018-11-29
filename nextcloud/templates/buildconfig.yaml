@@ -2,7 +2,7 @@
 kind: BuildConfig
 apiVersion: build.openshift.io/v1
 metadata:
-  name: nginx-s3-{{ template "nextcloud.fullname" . }}
+  name: nginx-nextcloud-{{ template "nextcloud.fullname" . }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
@@ -25,4 +25,4 @@ spec:
   output:
     to:
       kind: ImageStreamTag
-      name: nginx-s3-{{ template "nextcloud.fullname" . }}:latest
+      name: nginx-nextcloud-{{ template "nextcloud.fullname" . }}:latest
